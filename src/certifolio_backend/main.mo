@@ -394,9 +394,6 @@ actor certifolio {
 		return tokenPk;
 	};
 
-	public shared query (msg) func whoami() : async Principal {
-    	return msg.caller;
-  	};
 	
 	public shared(msg) func addPublisher(pub : Principal, _name : Text) : () {
 		assert msg.caller == admin;
