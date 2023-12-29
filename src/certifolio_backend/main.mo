@@ -27,6 +27,17 @@ actor certifolio {
 	
 	private type TokenAddress = Principal;
 	private type TokenId = Nat;
+	public type Metadata = {
+		uri : Text;
+		name : Text;
+		publisher : Principal;
+		certificateId : Nat;
+		eventName : Text;
+		standing : Nat;
+		track : Text;
+		date : Int;
+		scope : Text;
+	};
 	
 	private stable var tokenPk : Nat = 0;
 	private stable var bundlePk : Nat = 0;
@@ -57,6 +68,10 @@ actor certifolio {
 	private stable var bundleEntries : [(Nat, [TokenId])] = [];
 	private stable var bundleOwnerEntries : [(Nat, Principal)] = [];
 	private stable var bundleNameEntries : [(Nat, Text)] = [];
+	//helper
+	private let certficateOwnedList : [(Principal, [TokenId])] = [];
+	private let bundleOwnedList : [(Principal, [Nat])] = [];
+
 
 	
 	private let tokenURIs : HashMap.HashMap<TokenId, Text> = HashMap.fromIter<TokenId, Text>(tokenURIEntries.vals(), 10, Nat.equal, Hash.hash);
@@ -76,6 +91,8 @@ actor certifolio {
 	private let bundle : HashMap.HashMap<Nat, [TokenId]> = HashMap.fromIter<Nat, [TokenId]>(bundleEntries.vals(), 10, Nat.equal, Hash.hash);
 	private let bundleOwner : HashMap.HashMap<Nat, Principal> = HashMap.fromIter<Nat, Principal>(bundleOwnerEntries.vals(), 10, Nat.equal, Hash.hash);
 	private let bundleName : HashMap.HashMap<Nat, Text> = HashMap.fromIter<Nat, Text>(bundleNameEntries.vals(), 10, Nat.equal, Hash.hash);
+	private let certificateOwned : HashMap.HashMap<Principal, [TokenId]> = HashMap.fromIter<Principal, [TokenId]>(certficateOwnedList.vals(), 10, Principal.equal, Principal.hash);
+	private let bundleOwned : HashMap.HashMap<Principal, [Nat]> = HashMap.fromIter<Principal, [Nat]>(bundleOwnedList.vals(), 10, Principal.equal, Principal.hash); 
 	
 
 	private func _unwrap<T>(x : ?T) : T {
@@ -83,6 +100,104 @@ actor certifolio {
 			case null { P.unreachable() };
 			case (?x_) { x_ };
 		}
+	};
+	
+	public shared query func totalSupply() : async Nat {
+		return tokenPk;
+	};
+
+	public shared query func totalBundle() : async Nat {
+		return bundlePk;
+	};
+
+	public shared query func getCertificateOwned(p : Principal) : async ?[TokenId] {
+		return certificateOwned.get(p);
+	};
+
+	public shared query func getBundleOwned(p : Principal) : async ?[Nat] {
+		return bundleOwned.get(p);
+	};
+
+	public shared query func getMetadata(ids : TokenId) : async Metadata {
+		let metadata : Metadata = {
+			uri = _unwrap(tokenURIs.get(ids));
+			name = _unwrap(names.get(ids));
+			publisher = _unwrap(publishers.get(ids));
+			certificateId = _unwrap(certificateId.get(ids));
+			eventName = _unwrap(eventName.get(ids));
+			standing = _unwrap(standing.get(ids));
+			track = _unwrap(track.get(ids));
+			date = _unwrap(date.get(ids));
+			scope = _unwrap(scope.get(ids));
+		};
+		return metadata;
+	};
+
+	public shared query func getBatchMetadata(ids : [TokenId]) : async [Metadata] {
+		var metadata : [Metadata] = [];
+		for (id in ids.vals()) {
+			let temp : Metadata = {
+				uri = _unwrap(tokenURIs.get(id));
+				name = _unwrap(names.get(id));
+				publisher = _unwrap(publishers.get(id));
+				certificateId = _unwrap(certificateId.get(id));
+				eventName = _unwrap(eventName.get(id));
+				standing = _unwrap(standing.get(id));
+				track = _unwrap(track.get(id));
+				date = _unwrap(date.get(id));
+				scope = _unwrap(scope.get(id));
+			};
+			metadata := Array.append<Metadata>(metadata, [temp]);
+		};
+		return metadata;
+	};
+
+	public shared query func getBundleMetadata(id : Nat) : async [Metadata] {
+		var metadata : [Metadata] = [];
+		switch (bundle.get(id)) {
+			case (?bundle) {
+				for (id in bundle.vals()) {
+					let temp : Metadata = {
+						uri = _unwrap(tokenURIs.get(id));
+						name = _unwrap(names.get(id));
+						publisher = _unwrap(publishers.get(id));
+						certificateId = _unwrap(certificateId.get(id));
+						eventName = _unwrap(eventName.get(id));
+						standing = _unwrap(standing.get(id));
+						track = _unwrap(track.get(id));
+						date = _unwrap(date.get(id));
+						scope = _unwrap(scope.get(id));
+					};
+					metadata := Array.append<Metadata>(metadata, [temp]);
+				};
+			};
+			case null {};
+		};
+		return metadata;
+	};
+
+	public shared query func getOwnedMetadata(p : Principal) : async [Metadata] {
+		var metadata : [Metadata] = [];
+		switch (certificateOwned.get(p)) {
+			case (?owned) {
+				for (id in owned.vals()) {
+					let temp : Metadata = {
+						uri = _unwrap(tokenURIs.get(id));
+						name = _unwrap(names.get(id));
+						publisher = _unwrap(publishers.get(id));
+						certificateId = _unwrap(certificateId.get(id));
+						eventName = _unwrap(eventName.get(id));
+						standing = _unwrap(standing.get(id));
+						track = _unwrap(track.get(id));
+						date = _unwrap(date.get(id));
+						scope = _unwrap(scope.get(id));
+					};
+					metadata := Array.append<Metadata>(metadata, [temp]);
+				};
+			};
+			case null {};
+		};
+		return metadata;
 	};
 	
 	public shared query func balanceOf(p : Principal) : async ?Nat {
@@ -140,6 +255,17 @@ actor certifolio {
 		bundle.put(bundlePk, tokenIds);
 		bundleOwner.put(bundlePk, msg.caller);
 		bundleName.put(bundlePk, name);
+		//add to bundleOwned
+		let temp = bundleOwned.get(msg.caller);
+		switch (temp) {
+			case (?owned) {
+				let array = Array.append<Nat>(owned, [bundlePk]);
+				bundleOwned.put(msg.caller, array);
+			};
+			case null {
+				bundleOwned.put(msg.caller, [bundlePk]);
+			};
+		};
 		return bundlePk;
 	};
 
@@ -151,9 +277,9 @@ actor certifolio {
 		return bundle.get(bundleId);
 	};
 
-
-
-
+	public shared query func getBundleName(bundleId : Nat) : async ?Text {
+		return bundleName.get(bundleId);
+	};
 	
 	public shared query func name() : async Text {
 		return name_;
@@ -249,9 +375,24 @@ actor certifolio {
 		track.put(tokenPk, _track);
 		date.put(tokenPk, _date);
 		scope.put(tokenPk, _scope);
+		//add to certificateOwned
+		let temp = certificateOwned.get(msg.caller);
+		switch (temp) {
+			case (?owned) {
+				let array = Array.append<TokenId>(owned, [tokenPk]);
+				certificateOwned.put(msg.caller, array);
+			};
+			case null {
+				certificateOwned.put(msg.caller, [tokenPk]);
+			};
+		};
 		
 		return tokenPk;
 	};
+
+	public shared query (msg) func whoami() : async Principal {
+    	return msg.caller;
+  	};
 	
 	public shared(msg) func addPublisher(pub : Principal, _name : Text) : () {
 		assert msg.caller == admin;
