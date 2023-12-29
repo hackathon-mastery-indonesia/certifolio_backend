@@ -199,6 +199,19 @@ actor certifolio {
 		};
 		return metadata;
 	};
+
+	public shared query func addToBundle(bundleId : Nat, tokenId : TokenId) : async () {
+		let temp = bundle.get(bundleId);
+		switch (temp) {
+			case (?bundlee) {
+				let array = Array.append<TokenId>(bundlee, [tokenId]);
+				bundle.put(bundleId, array);
+			};
+			case null {
+				bundle.put(bundleId, [tokenId]);
+			};
+		};
+	};
 	
 	public shared query func balanceOf(p : Principal) : async ?Nat {
 		return balances.get(p);
@@ -399,6 +412,8 @@ actor certifolio {
 		assert msg.caller == admin;
 		publishersName.put(pub, _name);
 	};
+
+
 	
 	// Internal
 	
