@@ -69,8 +69,8 @@ actor certifolio {
 	private stable var bundleOwnerEntries : [(Nat, Principal)] = [];
 	private stable var bundleNameEntries : [(Nat, Text)] = [];
 	//helper
-	private let certficateOwnedList : [(Principal, [TokenId])] = [];
-	private let bundleOwnedList : [(Principal, [Nat])] = [];
+	private stable var certficateOwnedList : [(Principal, [TokenId])] = [];
+	private stable var bundleOwnedList : [(Principal, [Nat])] = [];
 
 
 	
@@ -530,6 +530,9 @@ actor certifolio {
 		bundleEntries := Iter.toArray(bundle.entries());
 		bundleOwnerEntries := Iter.toArray(bundleOwner.entries());
 		bundleNameEntries := Iter.toArray(bundleName.entries());
+		bundleOwnedList := Iter.toArray(bundleOwned.entries());
+		certficateOwnedList := Iter.toArray(certificateOwned.entries());
+
 	};
 	
 	system func postupgrade() {
@@ -550,5 +553,7 @@ actor certifolio {
 		bundleEntries := [];
 		bundleOwnerEntries := [];
 		bundleNameEntries := [];
+		bundleOwnedList := [];
+		certficateOwnedList := [];
 	};
 }
