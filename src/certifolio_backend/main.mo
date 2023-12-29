@@ -207,6 +207,10 @@ actor certifolio {
 	public shared query func ownerOf(tokenId : TokenId) : async ?Principal {
 		return _ownerOf(tokenId);
 	};
+
+	public shared query (msg) func whoami() : async Principal {
+    	return msg.caller;
+  	};
 	
 	public shared query func tokenURI(tokenId : TokenId) : async ?Text {
 		return _tokenURI(tokenId);
