@@ -33,17 +33,6 @@ window.onload = async () => {
   console.log("globalIdentity", globalIdentity);
 }
 
-
-
-
-window.onload = async () => {
-  const authClient = await AuthClient.create();
-  console.log("authClient", await authClient.isAuthenticated());
-  if(await authClient.isAuthenticated()){
-    await handleAuthenticated(authClient);
-  }
-}
-
 document.querySelector("#mintForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const button = e.target.querySelector("button");
@@ -86,13 +75,7 @@ document.querySelector("#addPub").addEventListener("submit", async (e) => {
 
   button.setAttribute("disabled", true);
   const formData = {
-    _uri: document.getElementById('uri').value,
     _name: document.getElementById('name').value,
-    _certificateId: document.getElementById('certificateId').value,
-    _eventName: document.getElementById('eventName').value,
-    _standing: document.getElementById('standing').value,
-    _track: document.getElementById('track').value,
-    _scope: document.getElementById('scope').value,
   };
   // Interact with foo actor, calling the greet method
   //const greeting = await actor.mint(formData);
@@ -106,27 +89,6 @@ document.querySelector("#addPub").addEventListener("submit", async (e) => {
 
   return false;
 });
-
-async function  handleAuthenticated(authClient){
-  console.log("Authenticated with identity: ", authClient.getIdentity().getPrincipal().toString());
-  const identity = authClient.getIdentity();
-  globalIdentity = identity;
-  console.log("identity", globalIdentity.getPrincipal().toString());
-  const agent = new HttpAgent({ identity });
-  if (process.env.DFX_NETWORK !== "ic") {
-    agent.fetchRootKey().catch((err) => {
-      console.warn("Unable to fetch root key. Check to ensure that your local replica is running");
-      console.error(err);
-    });
-  }
-  actor = Actor.createActor(idlFactory, {
-    agent,
-    canisterId: process.env.CANISTER_ID_CERTIFOLIO_BACKEND,
-  });
-  console.log("ppppppp");
-  const principal = await actor.whoami();
-  console.log("principal", principal.toString());
-}
 
 //for logout
 document.querySelector("#logout").addEventListener("click", async (e) => {
