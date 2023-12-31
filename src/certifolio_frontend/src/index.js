@@ -59,6 +59,8 @@ document.querySelector("#logout").addEventListener("click", async (e) => {
   console.log("logout");
 });
 
+//...
+
 //login button
 document.querySelector("#login").addEventListener("click", async (e) => {
   e.preventDefault();
