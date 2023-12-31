@@ -394,10 +394,11 @@ actor certifolio {
 		return tokenPk;
 	};
 
-	
-	public shared(msg) func addPublisher(pub : Principal, _name : Text) : () {
-		assert msg.caller == admin;
-		publishersName.put(pub, _name);
+	//temp 
+	public shared(msg) func addPublisher(_name : Text) : () {
+		//assert msg.caller == admin;
+		//publishersName.put(pub, _name);
+		publishersName.put(msg.caller, _name);
 	};
 	
 	// Internal
