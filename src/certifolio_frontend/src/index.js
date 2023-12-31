@@ -5,6 +5,33 @@ import {AuthClient} from "@dfinity/auth-client";
 import { idlFactory } from "../../declarations/certifolio_backend/certifolio_backend.did.js";
 
 let globalIdentity;
+let actor;
+
+
+
+window.onload = async () => {
+  const authClient = await AuthClient.create();
+  console.log("authClient", await authClient.isAuthenticated());
+  if(await authClient.isAuthenticated()){
+    
+    globalIdentity = await authClient.getIdentity();
+    console.log("identity", globalIdentity.getPrincipal().toString());
+    const agent = new HttpAgent({ "identity":globalIdentity });
+    if (process.env.DFX_NETWORK !== "ic") {
+      agent.fetchRootKey().catch((err) => {
+        console.warn("Unable to fetch root key. Check to ensure that your local replica is running");
+        console.error(err);
+      });
+    }
+    actor = Actor.createActor(idlFactory, {
+      agent,
+      canisterId: process.env.CANISTER_ID_CERTIFOLIO_BACKEND,
+    });
+    const principal = await actor.whoami();
+    console.log("kontol", principal.toString());
+  }  
+  console.log("globalIdentity", globalIdentity);
+}
 
 document.querySelector("form").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -27,8 +54,8 @@ document.querySelector("form").addEventListener("submit", async (e) => {
 //login button
 document.querySelector("#login").addEventListener("click", async (e) => {
   e.preventDefault();
-
   const authClient = await AuthClient.create();
+
   await authClient.login({
     maxTimeToLive: BigInt(7 * 24 * 60 * 60 * 1000000000),
     onSuccess: async () => {
@@ -48,7 +75,7 @@ document.querySelector("#login").addEventListener("click", async (e) => {
         console.error(err);
       });
     }
-    const actor = Actor.createActor(idlFactory, {
+    actor = Actor.createActor(idlFactory, {
       agent,
       canisterId: process.env.CANISTER_ID_CERTIFOLIO_BACKEND,
     });
@@ -57,3 +84,10 @@ document.querySelector("#login").addEventListener("click", async (e) => {
     console.log("principal", principal.toString());
     };
 }); 
+
+//whoami button
+document.querySelector("#whoami").addEventListener("click", async (e) => {
+  e.preventDefault();
+  const principal = await actor.whoami();
+  console.log("kontol", principal.toString());
+});
