@@ -51,6 +51,14 @@ document.querySelector("form").addEventListener("submit", async (e) => {
   return false;
 });
 
+//for logout
+document.querySelector("#logout").addEventListener("click", async (e) => {
+  e.preventDefault();
+  const authClient = await AuthClient.create();
+  await authClient.logout();
+  console.log("logout");
+});
+
 //login button
 document.querySelector("#login").addEventListener("click", async (e) => {
   e.preventDefault();
