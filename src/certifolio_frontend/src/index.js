@@ -87,6 +87,28 @@ document.querySelector("#addPub").addEventListener("submit", async (e) => {
 
   document.getElementById("greeting").innerText = greet2;
 
+  console.log("greet2 sukse");
+
+  return false;
+});
+
+document.querySelector("#getMetadata").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const button = e.target.querySelector("button")
+
+  button.setAttribute("disabled", true);
+  const formData = {
+    _id_nft: document.getElementById('id_nft').value,
+  };
+
+  const greet2 = await actor.getMetadata(
+    parseInt(formData._id_nft),
+  );
+
+  button.removeAttribute("disabled");
+
+  console.log("greet2", greet2);
+
   return false;
 });
 
@@ -119,7 +141,7 @@ document.querySelector("#login").addEventListener("click", async (e) => {
     const identity = authClient.getIdentity();
     globalIdentity = identity;
     console.log("identity", globalIdentity.getPrincipal().toString());
-    const agent = new HttpAgent({ identity });
+    const agent = new HttpAgent({ identity }, );
     if (process.env.DFX_NETWORK !== "ic") {
       agent.fetchRootKey().catch((err) => {
         console.warn("Unable to fetch root key. Check to ensure that your local replica is running");
